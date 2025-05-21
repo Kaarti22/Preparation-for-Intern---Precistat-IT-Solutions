@@ -1,1 +1,6 @@
 env
+__pycache__
+*.log
+media/frames/*
+media/outputs/*
+media/audio/*
