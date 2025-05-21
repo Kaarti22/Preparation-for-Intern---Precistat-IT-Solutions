@@ -1,0 +1,1 @@
+# Preparations for Intern - Precistat IT solutions
