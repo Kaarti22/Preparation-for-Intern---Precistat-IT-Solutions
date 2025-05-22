@@ -8,3 +8,12 @@
 2025-05-22 10:46:04,234 INFO: Frames are extracted from SampleVideo_1280x720_2mb.mp4
 2025-05-22 10:57:57,535 INFO: Uploaded video saved at media/uploads/SampleVideo_1280x720_2mb.mp4
 2025-05-22 10:58:00,001 INFO: Frames are extracted from SampleVideo_1280x720_2mb.mp4
+2025-05-22 11:18:17,408 INFO: Uploaded video saved at media/uploads/SampleVideo_1280x720_1mb.mp4
+2025-05-22 11:18:17,882 INFO: Extracted frames to media/frames/SampleVideo_1280x720_1mb
+2025-05-22 11:18:20,820 INFO: Extracted audio to media/frames/SampleVideo_1280x720_1mb\audio.wav
+2025-05-22 11:50:45,320 INFO: Uploaded video saved at media/uploads/SampleVideo_1280x720_1mb.mp4
+2025-05-22 11:50:45,677 INFO: Extracted frames to media/frames/SampleVideo_1280x720_1mb
+2025-05-22 11:50:45,877 INFO: Extracted audio to media/frames/SampleVideo_1280x720_1mb\audio.wav
+2025-05-22 11:51:49,520 INFO: Uploaded video saved at media/uploads/SampleVideo_1280x720_1mb.mp4
+2025-05-22 11:51:49,882 INFO: Extracted frames to media/frames/SampleVideo_1280x720_1mb
+2025-05-22 11:51:50,009 INFO: Extracted audio to media/frames/SampleVideo_1280x720_1mb\audio.wav

@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from app.logger import logger
-from app.processor import extract_frames_opencv, extract_frames_and_audio
+from app.processor import extract_frames_opencv, extract_frames_and_audio, run_yolo_detection_on_frames
 import os
 
 app = FastAPI()
@@ -40,11 +40,14 @@ async def extract_frames_and_audio_from_video(file: UploadFile = File(...)):
     output_dir = f"media/frames/{file.filename.rsplit('.', 1)[0]}"
     try:
         result = extract_frames_and_audio(file_location, output_dir, frame_rate=1)
+        detected_dir, detections = run_yolo_detection_on_frames(result["frames_dir"])
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
     return {
         "message": f"Frames and audio extracted from {file.filename}",
         "frames_dir": result["frames_dir"],
-        "audio_file": result["audio_file"] or "No audio stream found"
+        "audio_file": result["audio_file"] or "No audio stream found",
+        "detected_frames_dir": detected_dir,
+        "detections": detections
     }

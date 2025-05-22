@@ -1,6 +1,7 @@
 import ffmpeg
 import os
 import cv2
+from ultralytics import YOLO
 from app.logger import logger
 
 def extract_frames_opencv(video_path: str, output_frame_dir: str, frame_rate: int = 1):
@@ -59,3 +60,28 @@ def extract_frames_and_audio(video_path: str, output_dir: str, frame_rate: int =
             }
     except ffmpeg.Error as e:
         logger.info("FFmpeg error while checking audio stream: ", e)
+
+def run_yolo_detection_on_frames(frame_dir: str, model_path: str = "yolov8n.pt"):
+    model = YOLO(model_path)
+
+    detected_frames_dir = os.path.join(frame_dir, "detected")
+    os.makedirs(detected_frames_dir, exist_ok=True)
+
+    results_summary = []
+
+    for filename in sorted(os.listdir(frame_dir)):
+        if filename.endswith(".jpg"):
+            frame_path = os.path.join(frame_dir, filename)
+            result = model(frame_path)
+
+            result[0].save(filename=os.path.join(detected_frames_dir, filename))
+
+            boxes = result[0].boxes
+            objects = [model.names[int(cls)] for cls in boxes.cls] if boxes else []
+            results_summary.append({
+                "frame": filename,
+                "objects_detected": objects
+            })
+        
+    logger.info("YOLO detection has completed successfully.")
+    return detected_frames_dir, results_summary
