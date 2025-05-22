@@ -1,7 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from app.logger import logger
-from app.processor import extract_audio, extract_frames
-from app.detector import detect_objects
+from app.processor import extract_audio, extract_frames, extract_frames_opencv
 
 app = FastAPI()
 
@@ -19,7 +18,7 @@ async def extract_frames_from_video(file: UploadFile = File(...)):
 
     frame_dir = f"media/frames/{file.filename.split('.')[0]}"
     try:
-        extract_frames(file_location, frame_dir)
+        extract_frames_opencv(file_location, frame_dir, frame_rate=1)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     
