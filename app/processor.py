@@ -61,7 +61,7 @@ def extract_frames_and_audio(video_path: str, output_dir: str, frame_rate: int =
     except ffmpeg.Error as e:
         logger.info("FFmpeg error while checking audio stream: ", e)
 
-def run_yolo_detection_on_frames(frame_dir: str, model_path: str = "yolov8n.pt"):
+def run_yolo_detection_on_frames(frame_dir: str, model_path: str = "yolo11n.pt"):
     model = YOLO(model_path)
 
     detected_frames_dir = os.path.join(frame_dir, "detected")
