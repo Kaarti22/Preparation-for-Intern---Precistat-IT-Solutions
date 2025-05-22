@@ -1,25 +1,7 @@
 import ffmpeg
-import subprocess
 import os
 import cv2
-
-def has_audio_stream(input_path):
-    result = subprocess.run(
-        ['ffprobe', '-v', 'error', '-select_streams', 'a', '-show_entries', 'stream=codec_type', '-of', 'default=noprint_wrappers=1:nokey=1', input_path],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT
-    )
-    return bool(result.stdout.strip())
-
-def extract_audio(input_path, output_path):
-    if not has_audio_stream(input_path):
-        raise ValueError("No audio stream found in the video.")
-
-    ffmpeg.input(input_path).output(output_path, acodec='pcm_s16le', ac=1, ar='16000').run()
-
-def extract_frames(video_path: str, output_frame_dir: str):
-    os.makedirs(output_frame_dir, exist_ok=True)
-    ffmpeg.input(video_path).output(f"{output_frame_dir}/frame_%04d.jpg", r=1).run(overwrite_output=True)
+from app.logger import logger
 
 def extract_frames_opencv(video_path: str, output_frame_dir: str, frame_rate: int = 1):
     os.makedirs(output_frame_dir, exist_ok=True)
@@ -27,7 +9,7 @@ def extract_frames_opencv(video_path: str, output_frame_dir: str, frame_rate: in
     cap = cv2.VideoCapture(video_path)
 
     if not cap.isOpened():
-        print("Error: Could not open video.")
+        logger.info(f"Error: Could not open video.")
         return
 
     fps = cap.get(cv2.CAP_PROP_FPS)
@@ -49,4 +31,31 @@ def extract_frames_opencv(video_path: str, output_frame_dir: str, frame_rate: in
         frame_count += 1
 
     cap.release()
-    print(f"Extracted {saved_count} frames at {frame_rate} fps to '{output_frame_dir}'.")    
+    logger.info(f"Extracted {saved_count} frames at {frame_rate} fps to '{output_frame_dir}'.")
+
+def extract_frames_and_audio(video_path: str, output_dir: str, frame_rate: int = 1):
+    os.makedirs(output_dir, exist_ok=True)
+
+    frames_path = os.path.join(output_dir, "frame_%04d.jpg")
+    ffmpeg.input(video_path).output(frames_path, r=frame_rate).run(overwrite_output=True)
+    logger.info(f"Extracted frames to {output_dir}")
+
+    try:
+        probe = ffmpeg.probe(video_path)
+        audio_streams = [stream for stream in probe['streams'] if stream['codec_type'] == 'audio']
+        if audio_streams:
+            audio_path = os.path.join(output_dir, "audio.wav")
+            ffmpeg.input(video_path).output(audio_path, acodec='pcm_s16le', ac=2, ar='44100').run(overwrite_output=True)
+            logger.info(f"Extracted audio to {audio_path}")
+            return {
+                "frames_dir": output_dir,
+                "audio_file": audio_path
+            }
+        else:
+            logger.info(f"No audio stream found in {video_path}.")
+            return {
+                "frames_dir": output_dir,
+                "audio_file": None
+            }
+    except ffmpeg.Error as e:
+        logger.info("FFmpeg error while checking audio stream: ", e)
