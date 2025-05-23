@@ -1,53 +1,42 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from app.logger import logger
-from app.processor import extract_frames_opencv, extract_frames_and_audio, run_yolo_detection_on_frames
+from fastapi import FastAPI, UploadFile, File
+import shutil
 import os
+from app.logger import logger
+from app.video_processor import detect_persons, is_person_idle
 
 app = FastAPI()
+
+MEDIA_UPLOADS = "media/uploads"
+MEDIA_FRAMES = "media/frames"
+MEDIA_RESULTS = "media/results"
 
 @app.get("/")
 def read_root():
     return {"message": "Smart Video Analyzer API is running"}
 
-@app.post("/extract-frames-from-video/")
-async def extract_frames_from_video(file: UploadFile = File(...)):
-    file_location = f"media/uploads/{file.filename}"
-    with open(file_location, "wb+") as f:
-        f.write(await file.read())
+@app.post("/analyze/")
+async def analyze_video(file: UploadFile = File(...)):
+    os.makedirs(MEDIA_UPLOADS, exist_ok=True)
 
-    logger.info(f"Uploaded video saved at {file_location}")
-
-    frame_dir = f"media/frames/{file.filename.split('.')[0]}"
-    try:
-        extract_frames_opencv(file_location, frame_dir, frame_rate=1)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-    return {
-        "message": f"Frames are extracted from {file.filename}",
-        "frames_dir": frame_dir
-    }
-
-@app.post("/extract-frames-and-audio/")
-async def extract_frames_and_audio_from_video(file: UploadFile = File(...)):
-    file_location = f"media/uploads/{file.filename}"
-    os.makedirs("media/uploads", exist_ok=True)
-    with open(file_location, "wb+") as f:
-        f.write(await file.read())
+    upload_path = os.path.join(MEDIA_UPLOADS, file.filename)
+    with open(upload_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    logger.info(f"Uploaded video saved at: {upload_path}")
     
-    logger.info(f"Uploaded video saved at {file_location}")
+    filename_base = os.path.splitext(file.filename)[0]
+    frames_dir = os.path.join(MEDIA_FRAMES, filename_base)
+    result_path = os.path.join(MEDIA_RESULTS, f"{filename_base}.json")
 
-    output_dir = f"media/frames/{file.filename.rsplit('.', 1)[0]}"
-    try:
-        result = extract_frames_and_audio(file_location, output_dir, frame_rate=1)
-        detected_dir, detections = run_yolo_detection_on_frames(result["frames_dir"])
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    data = detect_persons(upload_path, frames_dir, result_path)
+    idle_detected, idle_duration =is_person_idle(data["frames_with_person"], data["fps"])
+
+    logger.info(f"Idle detected: {idle_detected}, duration: {idle_duration}")
 
     return {
-        "message": f"Frames and audio extracted from {file.filename}",
-        "frames_dir": result["frames_dir"],
-        "audio_file": result["audio_file"] or "No audio stream found",
-        "detected_frames_dir": detected_dir,
-        "detections": detections
+        "person_detected": data["person_detected"],
+        "idle_detected": idle_detected,
+        "idle_duration": f"{idle_duration} seconds" if idle_detected else "0 seconds",
+        "frames_tracked": len(data["frames_with_person"]),
+        "total_frames": data["total_frames"],
+        "result_path": result_path
     }
