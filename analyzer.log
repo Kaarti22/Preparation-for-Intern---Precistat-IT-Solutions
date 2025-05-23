@@ -35,3 +35,8 @@
 2025-05-23 10:36:25,664 INFO: Saved result to: media/results\7251414-uhd_2160_3840_25fps.json
 2025-05-23 10:36:25,664 INFO: Finished processing video: media/uploads\7251414-uhd_2160_3840_25fps.mp4, frames: 639, person detected: True
 2025-05-23 10:36:25,666 INFO: Idle detected: False, duration: 0
+2025-05-23 10:48:19,806 INFO: Uploaded video saved at: media/uploads\idle_person.mp4
+2025-05-23 10:48:19,897 INFO: Started processing video: media/uploads\idle_person.mp4
+2025-05-23 10:52:17,950 INFO: Saved result to: media/results\idle_person.json
+2025-05-23 10:52:17,954 INFO: Finished processing video: media/uploads\idle_person.mp4, frames: 1050, person detected: True
+2025-05-23 10:52:17,959 INFO: Idle detected: True, duration: 34.97
